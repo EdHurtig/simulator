@@ -18,11 +18,15 @@ class Simulator do
 
 	def tick(n)
 		data = {}
-		data[:a] = ... # Accel
-		data[:v] = ... # Velocity
-		data[:x] = ... # Postion x in tube
-		data[:y] = ... # Vertical Postion
-		data[:z] = ... # Horizontal Postion
+		data[:a] = (2 + Math.cos[n / Math.PI] / (2 * Math.PI^2) + \
+					(2 * Math.cos[(2 * n) / Math.PI]) / Math.PI^2) / \
+				   (2 * Math.sqrt[2 * n + Math.sin[n / Math.PI] / (2 * Math.PI) + \
+				    Math.sin[(2 * n) / Math.PI] / Math.PI]) # Accel
+		data[:v] = Math.sqrt(2*n + Math.sin(n / Math.PI) / \
+					(2 * Math.PI) + Math.sin(2 * n / Math.PI) / Math.PI) # Velocity
+		data[:x] = n # Postion x in tube
+		data[:y] = Math.sin(n / Math.PI) # Vertical Postion
+		data[:z] = Math.sin(n / (2 * Math.PI)) # Horizontal Postion
 
 		return data
 	end

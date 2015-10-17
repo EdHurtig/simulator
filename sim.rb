@@ -1,7 +1,7 @@
 require 'unirest'
 class Simulator
 	def initialize(speed = 1)
-		@delay = 1 / speed
+		@delay = 1.0 / speed
 		@template = {
 			a: 0.0,
 			v: 0.0,
@@ -15,47 +15,51 @@ class Simulator
 	def run(n)
 		@run_length = n
 		ticks = []
-		n.times do |t|
+		t = 1
+		while t != n
 			data = tick t
 			push data
 			sleep @delay
+			t += 1
 		end
 	end
 
 	def tick(n)
 		data = @template
 
+		# Don't let increased tick speed crunch data together
+		n = n * @delay
+
 		# Come up with complete BS for datapoints
-		data[:a] = (2 + Math.cos(n / Math::PI) / (2 * Math::PI ** 2) + \
-					(2 * Math.cos((2 * n) / Math::PI) / Math::PI ** 2) / \
-				    (2 * Math.sqrt(2 * n + Math.sin(n / Math::PI) / (2 * Math::PI) + \
-				    Math.sin((2 * n) / Math::PI) / Math::PI))) # Accel
-		data[:v] = Math.sqrt(2 * n + Math.sin(n / Math::PI) / \
-					(2 * Math::PI) + Math.sin(2 * n / Math::PI) / Math::PI) # Velocity
-		data[:x] = n # Postion x in tube
-		data[:y] = Math.sin(n / Math::PI) # Vertical Postion
-		data[:z] = Math.sin(n / (2 * Math::PI)) # Horizontal Postion
+		data[:a] = (-1.1 * Math.sin(n) - 1) / (Math.sin(n) + 1.1)**2
+		data[:v] = Math.cos(n) / (1.1 + Math.sin(n)) + 2.5
+		data[:x] = 2.5*n + Math.log(10*Math.sin(n) + 11)
+
+		# Basically make it look like small vibrations
+		data[:y] = Math.sin(300*n)/800 # Vertical Postion
+		data[:z] = Math.sin(100*n)/500 # Horizontal Postion
 
 		return data
 	end
 
 	def push(data)
-		boday = data.inject("") do |acc, (k, v)|
+		body = data.inject("") do |acc, (k, v)|
 			acc += "#{k},pod=0001 value=#{v} #{timestamp}\n"
 		end
 
-		puts boday
-		resp = Unirest.post("http://influxdb.northeastern.me:8086/write?db=metrics", parameters: boday)
-		puts "#{resp.code} #{resp.body}"
+		puts body
+		resp = Unirest.post("http://influxdb.northeastern.me:8086/write?db=metrics", parameters: body)
 		if resp.code == 204
+			puts "OK"
 			save data
+		else
+			puts "ERROR: #{resp.code} #{resp.body}"
 		end
 	end
 
 	def timestamp
 		require 'time'
 		DateTime.now.strftime('%s%9N')
-		#DateTime.now.rfc3339(9)
 	end
 
 	def save(data)
@@ -71,4 +75,4 @@ class Simulator
 	end
 end
 
-Simulator.new(100).run(500)
+Simulator.new(10).run(-1)

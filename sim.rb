@@ -45,7 +45,7 @@ class Simulator
 		end
 
 		puts boday
-		resp = Unirest.post("http://stage-influxdb-1c:8086/write?db=metrics", parameters: boday)
+		resp = Unirest.post("http://influxdb.northeastern.me:8086/write?db=metrics", parameters: boday)
 		puts "#{resp.code} #{resp.body}"
 		if resp.code == 204
 			save data
@@ -71,4 +71,4 @@ class Simulator
 	end
 end
 
-Simulator.new.run(500)
+Simulator.new(100).run(500)
